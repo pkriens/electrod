@@ -1,0 +1,84 @@
+name: Electrod
+
+on: push
+
+jobs:
+  binaries:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest-large
+            arch: x86_64
+            ocaml-compiler: 4.14.1
+            path: native/darwin/amd64/electrod
+          - os: macos-latest-xlarge
+            arch: arm64
+            ocaml-compiler: 4.14.1
+            path: native/darwin/arm64/electrod
+          - os: ubuntu-latest
+            arch: x86_64
+            ocaml-compiler: 4.14.1
+            path: native/linux/amd64/electrod
+          - os: windows-latest
+            arch: x86_64
+            ocaml-compiler: 4.14.1
+            path: native/windows/amd64/electrod.exe
+    steps:
+      - name: checkout tree
+        uses: actions/checkout@v4      
+      - name: set-up OCaml
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          opam-local-packages: |
+            !electrod.opam.lock
+            electrod.opam
+      - name: Dependencies
+        run: opam install . --deps-only --with-test
+      - name: Build
+        run: opam exec -- dune build 
+      - name: Upload the build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: electrod.exe
+          name: ${{ matrix.path }}
+
+  create-pr:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: 'alloytools/org.alloytools.alloy'
+          fetch-depth: 1
+          path: 'org.alloytools.alloy'
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded-artifacts
+
+      - name: Prepare binaries for PR
+        run: |
+          mkdir -p org.alloytools.pardinus.native/native
+          cp -rf downloaded-artifacts/* org.alloytools.pardinus.native/
+      
+      - name: Commit and push changes
+        run: |
+          cd org.alloytools.pardinus.native/native
+          git config user.name 'GitHub Actions'
+          git config user.email 'actions@github.com'
+          git add .
+          git commit -m 'Update native binaries for electrod'
+          git push origin HEAD:electrod-natives
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          path: org.alloytools.alloy
+          branch: electrod-natives
+          base: master
+          title: 'Update native binaries for electrod'
+          body: 'This PR includes updated native binaries for electrod.'
