@@ -9,20 +9,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest-large
-            arch: x86_64
+          - os: macos-latest
             ocaml-compiler: 4.14.1
             path: native/darwin/amd64/electrod
-          - os: macos-latest-xlarge
-            arch: arm64
+          - os: macos-14
             ocaml-compiler: 4.14.1
             path: native/darwin/arm64/electrod
           - os: ubuntu-latest
-            arch: x86_64
             ocaml-compiler: 4.14.1
             path: native/linux/amd64/electrod
           - os: windows-latest
-            arch: x86_64
             ocaml-compiler: 4.14.1
             path: native/windows/amd64/electrod.exe
     steps:
@@ -36,14 +32,18 @@ jobs:
             !electrod.opam.lock
             electrod.opam
       - name: Dependencies
-        run: opam install . --deps-only --with-test
-      - name: Build
-        run: opam exec -- dune build 
+        run: 
+          - opam install . --deps-only --with-test
+            opam exec -- dune build 
+            rm -rf native
+            mkdir -p `dirname ${{ matrix.path }}`
+            cp electrod.exe ${{ matrix.path }}
+ 
       - name: Upload the build artifact
         uses: actions/upload-artifact@v4
         with:
-          path: electrod.exe
-          name: ${{ matrix.path }}
+          path: native/
+          name: native
 
   create-pr:
     needs: binaries
@@ -58,12 +58,11 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: downloaded-artifacts
+          path: native/
 
       - name: Prepare binaries for PR
         run: |
-          mkdir -p org.alloytools.pardinus.native/native
-          cp -rf downloaded-artifacts/* org.alloytools.pardinus.native/
+          cp -rf native/* org.alloytools.pardinus.native/native/
       
       - name: Commit and push changes
         run: |
