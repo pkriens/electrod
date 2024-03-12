@@ -46,7 +46,7 @@ jobs:
           name: ${{ matrix.path }}
 
   create-pr:
-    needs: build
+    needs: binaries
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
