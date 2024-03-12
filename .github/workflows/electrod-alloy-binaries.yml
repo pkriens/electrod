@@ -21,12 +21,12 @@ jobs:
             id: darwin-arm64
           - os: ubuntu-latest
             ocaml-compiler: 4.14.1
-            dir: darwin/amd64
+            dir: linux/amd64
             file: electrod
             id: linux-amd64
           - os: windows-latest
             ocaml-compiler: 4.14.1
-            dir: darwin/amd64
+            dir: windows/amd64
             file: electrod.exe
             id: windows-amd64
     steps:
