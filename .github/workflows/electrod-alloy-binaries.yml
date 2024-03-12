@@ -39,7 +39,7 @@ jobs:
         run: |
           opam install . --deps-only --with-test
           opam exec -- dune build 
-          rm -rf native
+          mkdir -p `dirname ${{ matrix.path }}`
           cp electrod.exe ${{ matrix.path }}
  
       - name: Upload the build artifact
@@ -65,7 +65,8 @@ jobs:
 
       - name: Prepare binaries for PR
         run: |
-          cp -rf native/*/ org.alloytools.pardinus.native/native/
+          mkdir -p org.alloytools.pardinus.native/native/
+          cp -rf native/*/native org.alloytools.pardinus.native/
       
       - name: Commit and push changes
         run: |
