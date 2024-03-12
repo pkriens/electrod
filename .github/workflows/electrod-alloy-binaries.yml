@@ -11,16 +11,20 @@ jobs:
         include:
           - os: macos-latest
             ocaml-compiler: 4.14.1
-            path: native/darwin/amd64/electrod
+            path: darwin/amd64/electrod
+            name: darwin-amd64
           - os: macos-14
             ocaml-compiler: 4.14.1
             path: native/darwin/arm64/electrod
+            name: darwin-arm64
           - os: ubuntu-latest
             ocaml-compiler: 4.14.1
             path: native/linux/amd64/electrod
+            name: linux-amd64
           - os: windows-latest
             ocaml-compiler: 4.14.1
             path: native/windows/amd64/electrod.exe
+            name: windows-amd64
     steps:
       - name: checkout tree
         uses: actions/checkout@v4      
@@ -36,14 +40,13 @@ jobs:
           opam install . --deps-only --with-test
           opam exec -- dune build 
           rm -rf native
-          mkdir -p `dirname ${{ matrix.path }}`
           cp electrod.exe ${{ matrix.path }}
  
       - name: Upload the build artifact
         uses: actions/upload-artifact@v4
         with:
           path: native/
-          name: native
+          name: ${{ matrix.name }}
 
   create-pr:
     needs: binaries
@@ -58,11 +61,11 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: native/
+          path: natives/
 
       - name: Prepare binaries for PR
         run: |
-          cp -rf native/* org.alloytools.pardinus.native/native/
+          cp -rf native/*/ org.alloytools.pardinus.native/native/
       
       - name: Commit and push changes
         run: |
