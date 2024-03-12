@@ -11,20 +11,24 @@ jobs:
         include:
           - os: macos-latest
             ocaml-compiler: 4.14.1
-            path: darwin/amd64/electrod
-            name: darwin-amd64
+            dir: darwin/amd64
+            file: electrod
+            id: darwin-amd64
           - os: macos-14
             ocaml-compiler: 4.14.1
-            path: native/darwin/arm64/electrod
-            name: darwin-arm64
+            dir: darwin/arm64
+            file: electrod
+            id: darwin-arm64
           - os: ubuntu-latest
             ocaml-compiler: 4.14.1
-            path: native/linux/amd64/electrod
-            name: linux-amd64
+            dir: darwin/amd64
+            file: electrod
+            id: linux-amd64
           - os: windows-latest
             ocaml-compiler: 4.14.1
-            path: native/windows/amd64/electrod.exe
-            name: windows-amd64
+            dir: darwin/amd64
+            file: electrod.exe
+            id: windows-amd64
     steps:
       - name: checkout tree
         uses: actions/checkout@v4      
@@ -39,14 +43,14 @@ jobs:
         run: |
           opam install . --deps-only --with-test
           opam exec -- dune build 
-          mkdir -p `dirname ${{ matrix.path }}`
-          cp electrod.exe ${{ matrix.path }}
+          mkdir -p ${{ matrix.dir }}
+          cp electrod.exe ${{ matrix.dir }}/${{ matrix.file }}
  
       - name: Upload the build artifact
         uses: actions/upload-artifact@v4
         with:
           path: native/
-          name: ${{ matrix.name }}
+          name: ${{ matrix.id }}
 
   create-pr:
     needs: binaries
@@ -61,16 +65,14 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: natives/
+          path: native/
+          merge-multiple: true
 
       - name: Prepare binaries for PR
         run: |
+          cd org.alloytools.alloy
           mkdir -p org.alloytools.pardinus.native/native/
-          cp -rf native/*/native org.alloytools.pardinus.native/
-      
-      - name: Commit and push changes
-        run: |
-          cd org.alloytools.pardinus.native/native
+          cp -rf ../native/* org.alloytools.pardinus.native/native
           git config user.name 'GitHub Actions'
           git config user.email 'actions@github.com'
           git add .
