@@ -32,12 +32,12 @@ jobs:
             !electrod.opam.lock
             electrod.opam
       - name: Dependencies
-        run: 
-          - opam install . --deps-only --with-test
-            opam exec -- dune build 
-            rm -rf native
-            mkdir -p `dirname ${{ matrix.path }}`
-            cp electrod.exe ${{ matrix.path }}
+        run: |
+          opam install . --deps-only --with-test
+          opam exec -- dune build 
+          rm -rf native
+          mkdir -p `dirname ${{ matrix.path }}`
+          cp electrod.exe ${{ matrix.path }}
  
       - name: Upload the build artifact
         uses: actions/upload-artifact@v4
