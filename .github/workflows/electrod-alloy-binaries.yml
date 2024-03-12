@@ -43,8 +43,8 @@ jobs:
         run: |
           opam install . --deps-only --with-test
           opam exec -- dune build 
-          mkdir -p ${{ matrix.dir }}
-          cp electrod.exe ${{ matrix.dir }}/${{ matrix.file }}
+          mkdir -p native/${{ matrix.dir }}
+          cp electrod.exe native/${{ matrix.dir }}/${{ matrix.file }}
  
       - name: Upload the build artifact
         uses: actions/upload-artifact@v4
